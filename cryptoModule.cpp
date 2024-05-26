@@ -178,7 +178,6 @@ String cryptoModule::get_key()
 //   _espSerial.print(",");
 //   _espSerial.print(server_name);
 //   _espSerial.println();
-
 //   delay(2000);
 //   while(_espSerial.available() <= 0){}
 //   String str = _espSerial.readStringUntil('\n');
