@@ -3,11 +3,13 @@
 #include <ESP8266HTTPClient.h>
 #include <WiFiClient.h>
 #include <string>
+#include <Base64.h>
+
 SoftwareSerial Master(D2, D3);
 String serverName;
 String protocol;
 String updated_query;
-String key = "123";
+String key = "mysecretkey";
 int encryption_mode;
 
 void setup() {
@@ -31,11 +33,18 @@ void loop()
     else if(mssg.startsWith("GET:"))
     {
       http_get(mssg);
-      //Serial.println(send_HTTP_request("https://blr1.blynk.cloud/external/api/update?token=N2WqLylm5Dlc4NzyIoQghr5Zyz-cdhDd&", queryparameters))
+    }
+    else if(mssg.startsWith("POST_QUERY:"))
+    {
+      http_post_query(mssg);
     }
     else if(mssg.startsWith("KEY:"))
     {
       set_key(mssg);
+    }
+    else if(mssg.startsWith("POST_JSON:"))
+    {
+      http_post_json(mssg);
     }
   }  
   else
@@ -47,24 +56,20 @@ void loop()
 
 void set_key(String mssg)
 {
-  key = str.substring(4);
+  key = mssg.substring(4);
   key.trim();
 }
 
-String encrypt(String val)
-{
+String encrypt(String val) {
   int len = val.length();
   int key_len = key.length();
-  Serial.println("Hello");
-  Serial.println(len);
-  Serial.println(key_len);
 
   String cipher = "";
 
-  for(int i =0 ; i < len; i++)
-  {
-    cipher += (val[i]^key[i % key_len]);
-    Serial.println("in");
+  for(int i = 0; i < len; i++) {
+    char encryptedChar = val.charAt(i) ^ key.charAt(i % key_len);
+    cipher += encryptedChar;
+    Serial.println((int)cipher.charAt(i));
   }
   return cipher;
 }
@@ -79,48 +84,102 @@ void set_server(String str)
   Master.println("OK");
 }
 
-// void http_get(String mssg)
-// {
-//   int i = 0;
-//   updated_query = "?";
-//   String key;
-//   String value;
-//   int posEquals;
-//   int nextAnd;
+void http_post_JSON(String mssg)
+{
+  int delimiter = mssg.indexOf(',');
+  String obj = mssg.substring(10, delimiter);
+  query.trim();
 
-//   while(i<mssg.length() || i==0)
-//     {
-//     if(i==0)
-//     {
-//         posEquals = mssg.indexOf('=');
-//         nextAnd = mssg.indexOf('&');
-//         key = mssg.substring(1, (posEquals)-1);
-//         value = mssg.substring(posEquals+1, (nextAnd-1)-(posEquals));
-//         i = nextAnd+1;
-//     }
-//     else
-//     {
-//         posEquals = mssg.indexOf('=', i);
-//         nextAnd = mssg.indexOf('&', i);
-//         if (posEquals == -1 || nextAnd == -1)
-//         {
-//             break;
-//         }
-//         key = mssg.substring(i, (posEquals) - i);
-//         value = mssg.substring(posEquals + 1, (nextAnd - 1)-(posEquals));
-//         i = nextAnd+1;
-//     }
-   
-//     updated_query += key;
-//     updated_query += "=";
-//     //value = encrypt_AES(value);
-//     updated_query += value;
-//     }
+  WiFiClient client;
+  HTTPClient http;
 
-//   Serial.println(updated_query);
-//   send_HTTP_request(serverName , "?token=N2WqLylm5Dlc4NzyIoQghr5Zyz-cdhDd&v1=123123123");
-// }
+  http.addHeader("Content-Type", "application/json");
+  int httpResponseCode = http.POST(obj);
 
+  if (httpResponseCode > 0) {
+
+    String payload = http.getString();
+    Master.print("HTTP Response code: ");
+    Master.println(httpResponseCode);
+    Master.println(payload);
+  } else {
+ 
+    Master.print("Error code: ");
+    Master.println(httpResponseCode);
+  }
+
+  
+  http.end();
+}
+
+void http_post_query(String mssg)
+{
+  String updatedPOSTdata = "";
+  
+  int delimiter = mssg.indexOf(',');
+  String query = mssg.substring(11, delimiter);
+  query.trim();
+  String encrypt_query = mssg.substring(delimiter+1);
+  encrypt_query.trim();
+
+  int i = 0;  
+  
+  updatedPOSTdata += query;
+  String key;
+  String value;
+  int posEquals;
+  int nextAnd;
+
+  if(!encrypt_query.isEmpty())
+  {
+    updatedPOSTdata += "&";
+    while (i < encrypt_query.length()) {
+    posEquals = encrypt_query.indexOf('=', i);
+    nextAnd = encrypt_query.indexOf('&', i);
+
+    
+    if (nextAnd == -1) {
+      key = encrypt_query.substring(i, posEquals);
+      value = encrypt_query.substring(posEquals + 1);
+      i = encrypt_query.length();  
+    } else {
+      key = encrypt_query.substring(i, posEquals);
+      value = encrypt_query.substring(posEquals + 1, nextAnd);
+      i = nextAnd + 1;  
+    }
+
+    updatedPOSTdata += key;
+    updatedPOSTdata += "=";
+    updatedPOSTdata += encrypt(value);
+
+    if (i < encrypt_query.length()) {
+      updatedPOSTdata += "&"; 
+    }
+  }
+
+  }
+
+  WiFiClient client;
+  HTTPClient http;
+
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  int httpsResponseCode = http.POST(updatedPOSTdata);
+
+  if (httpResponseCode > 0) {
+
+    String payload = http.getString();
+    Master.print("HTTP Response code: ");
+    Master.println(httpResponseCode);
+    Master.println(payload);
+  } else {
+ 
+    Master.print("Error code: ");
+    Master.println(httpResponseCode);
+  }
+
+  
+  http.end();
+}
 
 void http_get(String mssg) {
   int delimiter = mssg.indexOf(',');
@@ -168,11 +227,11 @@ void http_get(String mssg) {
   
   //Serial.println("")
   Serial.println(updated_query);
-  send_HTTP_request(serverName, updated_query);
+  send_get_HTTP_request(serverName, updated_query);
   Serial.println("done");
 }
  
-int send_HTTP_request(String serverName, String queryParameters) {
+int send_get_HTTP_request(String serverName, String queryParameters) {
   WiFiClient client;
   HTTPClient http;
 
