@@ -49,7 +49,7 @@ bool cryptoModule::sendWiFiCredentials(const char* ssid, const char* pass)
     }
 }
 
-void cryptoModule::GET(String query_parameters, String query_parameters_encrypt)
+void cryptoModule::GET_query(String query_parameters, String query_parameters_encrypt)
 {
   _espSerial.print("GET:");
   _espSerial.print(query_parameters);
@@ -66,13 +66,47 @@ void cryptoModule::GET(String query_parameters, String query_parameters_encrypt)
   }
 }
 
+void cryptoModule::POST_query(String query_parameters, String query_parameters_encrypt)
+{
+  _espSerial.print("POST_QUERY:");
+  _espSerial.print(query_parameters);
+  _espSerial.print(",");
+  _espSerial.print(query_parameters_encrypt);
+  _espSerial.println();
+  _espSerial.flush();
+
+  while(_espSerial.available() <= 0)
+  {
+    String str = _espSerial.readStringUntil('\n');
+    Serial.println("");
+    Serial.println(str);
+    Serial.println("");
+  }
+}
+
+void cryptoModule::POST_JSON(String JSONobj)
+{
+  _espSerial.print("POST_JSON:");
+  _espSerial.print(JSONobj);
+  _espSerial.println();
+  _espSerial.flush();
+
+  while(_espSerial.available() <= 0)
+  {
+    String str = _espSerial.readStringUntil('\n');
+    Serial.println("");
+    Serial.println(str);
+    Serial.println("");
+  }
+}
+
 const char* cryptoModule::generate_key(int length)
   {
-    const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{}|;:,.<>?";
+    const char charset[] = "yekmsctr";
     int charset_size = sizeof(charset) - 1;
     char *key = (char *)malloc(length + 1); 
 
-  
+
     if (key) 
     {
       srand((unsigned int)time(NULL)); 
@@ -98,8 +132,8 @@ void cryptoModule::set_key(const char* key)
   _espSerial.println();
   
   while(_espSerial.available() <= 0){}
-  String str = _espSerial.readStringUntil('\n');
-  if(str.startsWith("OK"))
+  String str1 = _espSerial.readStringUntil('\n');
+  if(str1.startsWith("OK"))
   {
     Serial.println("");
     Serial.println("New key :");
@@ -121,22 +155,6 @@ void cryptoModule::setServerDetails(const char* server, const char* protocol)
   _espSerial.print(",");
   _espSerial.print(protocol);
   _espSerial.println();
-
-  while(_espSerial.available() <= 0){}
-  String str = _espSerial.readStringUntil('\n');
-  if(str.startsWith("OK"))
-  {
-    Serial.println("");
-    Serial.println("Server name :");
-    Serial.print(server);
-    Serial.println("Protocol :");
-    Serial.print(protocol);
-    Serial.println("");
-  }
-  else
-  {
-    Serial.println("Failed to set");
-  }
 
   while(_espSerial.available() <= 0){}
   String str = _espSerial.readStringUntil('\n');
@@ -178,6 +196,7 @@ String cryptoModule::get_key()
 //   _espSerial.print(",");
 //   _espSerial.print(server_name);
 //   _espSerial.println();
+
 //   delay(2000);
 //   while(_espSerial.available() <= 0){}
 //   String str = _espSerial.readStringUntil('\n');
