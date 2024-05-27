@@ -4,7 +4,7 @@
 #include <WiFiClient.h>
 #include <string>
 #include <Base64.h>
-
+ 
 SoftwareSerial Master(D2, D3);
 String serverName;
 String protocol;
