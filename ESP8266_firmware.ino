@@ -44,7 +44,7 @@ void loop()
     }
     else if(mssg.startsWith("POST_JSON:"))
     {
-      http_post_json(mssg);
+      http_post_JSON(mssg);
     }
   }  
   else
@@ -71,7 +71,9 @@ String encrypt(String val) {
     cipher += encryptedChar;
     Serial.println((int)cipher.charAt(i));
   }
-  return cipher;
+
+  String base64Encoded = base64::encode(cipher);
+  return base64Encoded;
 }
 
 void set_server(String str)
@@ -88,7 +90,7 @@ void http_post_JSON(String mssg)
 {
   int delimiter = mssg.indexOf(',');
   String obj = mssg.substring(10, delimiter);
-  query.trim();
+  obj.trim();
 
   WiFiClient client;
   HTTPClient http;
@@ -163,7 +165,7 @@ void http_post_query(String mssg)
   HTTPClient http;
 
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-  int httpsResponseCode = http.POST(updatedPOSTdata);
+  int httpResponseCode = http.POST(updatedPOSTdata);
 
   if (httpResponseCode > 0) {
 
