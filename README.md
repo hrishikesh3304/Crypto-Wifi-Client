@@ -1,7 +1,6 @@
 # Cryptographic WiFi Module Library
 
-The Cryptographic WiFi Module Library provides a comprehensive solution for integrating cryptographic capabilities into WiFi-enabled devices, particularly targeting the ESP8266 platform. It simplifies the process of connecting to WiFi networks securely and facilitates easy integration with cloud services for beginners. This library is designed to offer straightforward cryptographic functionalities alongside standard WiFi connectivity.
-## Getting Started
+Arduino Library for interfacing CryptoWiFi Module.
 
 Download or clone this repository into your Arduino libraries directory.
 
