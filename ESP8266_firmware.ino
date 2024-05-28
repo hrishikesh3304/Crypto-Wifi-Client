@@ -4,8 +4,8 @@
 #include <WiFiClient.h>
 #include <string>
 #include <Base64.h>
- 
-SoftwareSerial Master(D2, D3);
+
+//SoftwareSerial Master(D2, D3);
 String serverName;
 String protocol;
 String updated_query;
@@ -14,50 +14,59 @@ int encryption_mode;
 
 void setup() {
   Serial.begin(9600);
-  Master.begin(9600);
 }
 
 void loop() 
 {
-  if (Master.available() > 0) 
+  if (Serial.available() > 0) 
   {
-    String mssg = Master.readStringUntil('\n');
+    String mssg = Serial.readStringUntil('\n');
+    mssg.trim();
     if(mssg.startsWith("WIFI:"))
-    { 
+    {
+      //Serial.println("1");
       receive_WiFi_cred(mssg);
+      //delay(1000);
     }
     else if(mssg.startsWith("SET:"))
     {
+      //Serial.println("2");
       set_server(mssg);
+      //delay(1000);
     }
     else if(mssg.startsWith("GET:"))
     {
+      //Serial.println("3");
       http_get(mssg);
+      //delay(2000);
     }
     else if(mssg.startsWith("POST_QUERY:"))
     {
+      //Serial.println("4");
       http_post_query(mssg);
+      //delay(2000);
     }
     else if(mssg.startsWith("KEY:"))
     {
+      //Serial.println("5");
       set_key(mssg);
+      //delay(2000);
     }
     else if(mssg.startsWith("POST_JSON:"))
     {
+      //Serial.println("6");
       http_post_JSON(mssg);
+      //delay(2000);
     }
+    delay(2000);
   }  
-  else
-  {
-    Master.read();
-  }
-  
 }
 
 void set_key(String mssg)
 {
   key = mssg.substring(4);
   key.trim();
+  Serial.println("OK");
 }
 
 String encrypt(String val) {
@@ -69,7 +78,7 @@ String encrypt(String val) {
   for(int i = 0; i < len; i++) {
     char encryptedChar = val.charAt(i) ^ key.charAt(i % key_len);
     cipher += encryptedChar;
-    Serial.println((int)cipher.charAt(i));
+    //Serial.println((int)cipher.charAt(i));
   }
 
   String base64Encoded = base64::encode(cipher);
@@ -83,7 +92,7 @@ void set_server(String str)
   serverName.trim();
   protocol = str.substring(delimiter+1);
   protocol.trim();
-  Master.println("OK");
+  Serial.println("OK");
 }
 
 void http_post_JSON(String mssg)
@@ -101,13 +110,13 @@ void http_post_JSON(String mssg)
   if (httpResponseCode > 0) {
 
     String payload = http.getString();
-    Master.print("HTTP Response code: ");
-    Master.println(httpResponseCode);
-    Master.println(payload);
+    Serial.print("[INFO] HTTP Response code: ");
+    Serial.print(httpResponseCode);
+    Serial.print(payload);
   } else {
  
-    Master.print("Error code: ");
-    Master.println(httpResponseCode);
+    Serial.print("[INFO] Error code: ");
+    Serial.print(httpResponseCode);
   }
 
   
@@ -170,13 +179,13 @@ void http_post_query(String mssg)
   if (httpResponseCode > 0) {
 
     String payload = http.getString();
-    Master.print("HTTP Response code: ");
-    Master.println(httpResponseCode);
-    Master.println(payload);
+    Serial.print("[INFO] HTTP Response code: ");
+    Serial.print(httpResponseCode);
+    Serial.print(payload);
   } else {
  
-    Master.print("Error code: ");
-    Master.println(httpResponseCode);
+    Serial.print("[INFO] Error code: ");
+    Serial.print(httpResponseCode);
   }
 
   
@@ -228,9 +237,8 @@ void http_get(String mssg) {
   }
   
   //Serial.println("")
-  Serial.println(updated_query);
+  //Serial.println(updated_query);
   send_get_HTTP_request(serverName, updated_query);
-  Serial.println("done");
 }
  
 int send_get_HTTP_request(String serverName, String queryParameters) {
@@ -247,13 +255,13 @@ int send_get_HTTP_request(String serverName, String queryParameters) {
   if (httpResponseCode > 0) {
 
     String payload = http.getString();
-    Master.print("HTTP Response code: ");
-    Master.println(httpResponseCode);
-    Master.println(payload);
+    Serial.print("[INFO] HTTP Response code: ");
+    Serial.print(httpResponseCode);
+    Serial.print(payload);
   } else {
  
-    Master.print("Error code: ");
-    Master.println(httpResponseCode);
+    Serial.print("Error code: ");
+    Serial.println(httpResponseCode);
   }
 
   
@@ -286,7 +294,7 @@ void receive_WiFi_cred(String str)
     // Serial.println("WiFi connected");
     // Serial.println("IP address: ");
     // Serial.println(WiFi.localIP());
-    Master.print("OK");
-    Master.print(WiFi.localIP());
-    Master.println("");
+    Serial.print("OK");
+    Serial.print(WiFi.localIP());
+    Serial.println("");
   }
