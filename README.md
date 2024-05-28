@@ -1,6 +1,9 @@
 # Cryptographic WiFi Module Library
 
-Arduino Library for interfacing CryptoWiFi Module.
+An Anrduino Library for interfacing CryptoWiFi Module.
+Upload Firmware on any ESP8266 family board -> Include CryptoWiFiClient in Arduino IDE
+And you are good to go!
+## Getting Started
 
 Download or clone this repository into your Arduino libraries directory.
 
