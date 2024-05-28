@@ -1,204 +1,216 @@
-#include "cryptoModule.h"
+#include "CryptoWifiClient.h"
 
-cryptoModule::cryptoModule(uint8_t rxPin, uint8_t txPin): _espSerial(rxPin, txPin) 
+CryptoWifiClient::CryptoWifiClient(uint8_t rxPin, uint8_t txPin): _wifiSerial(rxPin, txPin) 
 {
 }
 
-void cryptoModule::initialize() 
+void CryptoWifiClient::initialize() 
 {
-    _espSerial.begin(9600);
+    _wifiSerial.begin(9600);
     Serial.println("");
     Serial.println("");
     Serial.println("");
+Serial.println("*****************************************************");
+Serial.println("*               Cryptographic WiFi Module           *");
+Serial.println("*****************************************************");
 
-    Serial.println("******************************************");
-    Serial.println("*        Cryptographic WiFi Module       *");
-    Serial.println("******************************************");
-    delay(2000); 
 }
 
-bool cryptoModule::sendWiFiCredentials(const char* ssid, const char* pass) 
-  {
-    _espSerial.print("WIFI:");
-    _espSerial.print(ssid);
-    _espSerial.print(",");
-    _espSerial.print(pass);
-    _espSerial.println(); 
-    _espSerial.flush();
-
-    while(_espSerial.available() <= 0)
+bool CryptoWifiClient::sendWiFiCredentials(const char* ssid, const char* pass) 
+{
+    while (_wifiSerial.available() > 0) 
     {
+      _wifiSerial.read();
     }
-    String str = _espSerial.readStringUntil('\n');
+
+    _wifiSerial.print("WIFI:");
+    _wifiSerial.print(ssid);
+    _wifiSerial.print(",");
+    _wifiSerial.println(pass); 
+
+    Serial.println("");
+    Serial.print("\n[INFO] Sending WiFi credentials....");
+    int i = 0;
+    delay(1000);
+    while(_wifiSerial.available() <= 0)
+    {
+      if (i%2==0)
+      {
+        Serial.print("____");
+      }
+      else
+      {
+        Serial.print("....");
+      }
+      i++;
+      delay(1000);
+    }
+
+    String str = _wifiSerial.readStringUntil('\n');
     if(str.startsWith("OK"))
     {
     String ssidString = String(ssid); 
     ssidString.trim();
-    Serial.println("");
-    Serial.println("Connected to " +  ssidString);
-    Serial.print("IP ADDRESS: ");
+    Serial.println("\n[INFO] Connected to WiFi:");
+    Serial.print("       SSID: ");
+    Serial.println(ssidString);
+    Serial.print("       IP Address: ");
     String ip = str.substring(2);
-    Serial.print(ip);
-    Serial.println("");
+    Serial.println(ip);
     return true;
     }
     else
     {
-      Serial.println("Failed to connect");
+      Serial.println("\n\n[ERROR] Failed to connect to WiFi");
       return false;
     }
 }
 
-void cryptoModule::GET_query(String query_parameters, String query_parameters_encrypt)
+void CryptoWifiClient::getQuery(String query_parameters, String query_parameters_encrypt)
 {
-  _espSerial.print("GET:");
-  _espSerial.print(query_parameters);
-  _espSerial.print(",");
-  _espSerial.print(query_parameters_encrypt);
-  _espSerial.println();
-  _espSerial.flush();
+  while (_wifiSerial.available() > 0) 
+  {
+    _wifiSerial.read();
+  }
+  _wifiSerial.print("GET:");
+  _wifiSerial.print(query_parameters);
+  _wifiSerial.print(",");
+  _wifiSerial.println(query_parameters_encrypt);
+  delay(2000);
   
-  while(_espSerial.available() <= 0){
-  String str = _espSerial.readStringUntil('\n');
-  Serial.println("");
+  while(_wifiSerial.available() <= 0 ){}
+  String str = _wifiSerial.readStringUntil('\n');
+  Serial.println("\n\n[INFO] HTTP GET (URL Encoded) Request Sent");
+  Serial.println("       ");
   Serial.println(str);
-  Serial.println("");
-  }
+  
 }
 
-void cryptoModule::POST_query(String query_parameters, String query_parameters_encrypt)
+void CryptoWifiClient::postQuery(String query_parameters, String query_parameters_encrypt)
 {
-  _espSerial.print("POST_QUERY:");
-  _espSerial.print(query_parameters);
-  _espSerial.print(",");
-  _espSerial.print(query_parameters_encrypt);
-  _espSerial.println();
-  _espSerial.flush();
-
-  while(_espSerial.available() <= 0)
+  while (_wifiSerial.available() > 0) 
   {
-    String str = _espSerial.readStringUntil('\n');
-    Serial.println("");
-    Serial.println(str);
-    Serial.println("");
+    _wifiSerial.read();
   }
+  _wifiSerial.print("POST_QUERY:");
+  _wifiSerial.print(query_parameters);
+  _wifiSerial.print(",");
+  _wifiSerial.println(query_parameters_encrypt);
+  delay(2000);
+
+  while(_wifiSerial.available() <= 0)
+  {}
+    String str = _wifiSerial.readStringUntil('\n');
+    Serial.println("\n\n[INFO] HTTP POST (URL Encoded) Request Sent");
+    Serial.print("       ");
+    Serial.println(str);
+  
 }
 
-void cryptoModule::POST_JSON(String JSONobj)
+void CryptoWifiClient::postJSON(String JSONobj)
 {
-  _espSerial.print("POST_JSON:");
-  _espSerial.print(JSONobj);
-  _espSerial.println();
-  _espSerial.flush();
-
-  while(_espSerial.available() <= 0)
+  while (_wifiSerial.available() > 0) 
   {
-    String str = _espSerial.readStringUntil('\n');
-    Serial.println("");
-    Serial.println(str);
-    Serial.println("");
+    _wifiSerial.read();
   }
+
+  _wifiSerial.print("POST_JSON:");
+  _wifiSerial.println(JSONobj);
+  delay(2000);
+
+  while(_wifiSerial.available() <= 0)
+  {}
+    String str = _wifiSerial.readStringUntil('\n');
+    Serial.println("\n\n[INFO] HTTP POST (JSON) Request Sent");
+    Serial.print("       ");
+    Serial.println(str);
 }
 
-const char* cryptoModule::generate_key(int length)
-  {
-    const char charset[] = "yekmsctr";
+const char* CryptoWifiClient::generateKey(int length)
+{
+    const char charset[] = " !#$()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[^_`abcdefghijklmnopqrstuvwxyz{|}~";
     int charset_size = sizeof(charset) - 1;
     char *key = (char *)malloc(length + 1); 
 
-
     if (key) 
     {
-      srand((unsigned int)time(NULL)); 
+        srand((unsigned int)time(NULL)); 
 
-      for (int i = 0; i < length; i++) 
-      {
-        int key_index = rand() % charset_size;
-        key[i] = charset[key_index];
-        //printf("%c",key[i]);
+        for (int i = 0; i < length; i++) 
+        {
+            int key_index = rand() % charset_size;
+            key[i] = charset[key_index];
+        }
 
-      }
-    
-      key[length] = '\0'; 
+        key[length] = '\0'; 
     }
 
     return key; 
-  }
+}
 
-void cryptoModule::set_key(const char* key)
+
+void CryptoWifiClient::setKey(const char* key)
 {
-  _espSerial.print("KEY:");
-  _espSerial.print(key);
-  _espSerial.println();
+  _wifiSerial.print("KEY:");
+  _wifiSerial.println(key);
+  delay(2000);
   
-  while(_espSerial.available() <= 0){}
-  String str1 = _espSerial.readStringUntil('\n');
+  while(_wifiSerial.available() <= 0){}
+  String str1 = _wifiSerial.readStringUntil('\n');
   if(str1.startsWith("OK"))
   {
-    Serial.println("");
-    Serial.println("New key :");
+    Serial.println("\n\n[INFO] Encryption Key Set Successfully");
+    Serial.print("       Key: ");
     Serial.println(key);
-    Serial.println("");
   }
   else
   {
-    Serial.println("Failed to set");
+    Serial.println("\n\n[ERROR] Failed to Set Encryption Key");
   }
 }
 
-void cryptoModule::setServerDetails(const char* server, const char* protocol)
+void CryptoWifiClient::setServerDetails(const char* server, const char* protocol)
 {
+  while (_wifiSerial.available() > 0) 
+  {
+    _wifiSerial.read();
+  }
   _serverName = server;
   _protocol = protocol;
-  _espSerial.print("SET:");
-  _espSerial.print(server);
-  _espSerial.print(",");
-  _espSerial.print(protocol);
-  _espSerial.println();
+  _wifiSerial.print("SET:");
+  _wifiSerial.print(server);
+  _wifiSerial.print(",");
+  _wifiSerial.println(protocol);
+  delay(2000);
 
-  while(_espSerial.available() <= 0){}
-  String str = _espSerial.readStringUntil('\n');
+  while(_wifiSerial.available() <= 0){}
+  String str = _wifiSerial.readStringUntil('\n');
   if(str.startsWith("OK"))
   {
-    Serial.println("");
-    Serial.println("Server name :");
-    Serial.print(server);
-    Serial.println("Protocol :");
-    Serial.print(protocol);
-    Serial.println("");
+    Serial.println("\n\n[INFO] Server Details Set Successfully");
+    Serial.print("       Server: ");
+    Serial.println(server);
+    Serial.print("       Protocol: ");
+    Serial.println(protocol);
   }
   else
   {
-    Serial.println("Failed to set");
+    Serial.println("\n\n[ERROR] Failed to Set Server Details");
   }
 }
 
-String cryptoModule::get_serverName()
+String CryptoWifiClient::getServerName()
 {
   return _serverName;
 }
 
-String cryptoModule::get_protocol()
+String CryptoWifiClient::getProtocol()
 {
   return _protocol;
 }
 
-String cryptoModule::get_key()
+String CryptoWifiClient::getKey()
 {
   return _key;
 }
 
-
-// void cryptoModule::sendData(const char* server_name, const char* query_parameters)
-// {
-//   _espSerial.print("SEND:");
-//   _espSerial.print(query_parameters);
-//   _espSerial.print(",");
-//   _espSerial.print(server_name);
-//   _espSerial.println();
-
-//   delay(2000);
-//   while(_espSerial.available() <= 0){}
-//   String str = _espSerial.readStringUntil('\n');
-//   Serial.println(str);
-// }
