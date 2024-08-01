@@ -9,8 +9,9 @@ Download this repository on your machine.
 
 #### Add the zip file through Library Manager
 
-- In Arduino IDE got to Sketch/Include Library/Manage Libraries.
+- In Arduino IDE got to Sketch/Include Library.
 - Click on **Add .zip Library**.
+  ![Arduino](Arduino_Photo.png)
 - Start using it.
 
 #### Clone the repository
