@@ -106,12 +106,14 @@ To connect your Arduino to the NodeMCU for serial communication, follow these st
 - **Arduino TX** --> **NodeMCU RX** (GPIO3)
 - **Arduino GND** --> **NodeMCU GND**
 - **Arduino 3.3V** --> **NodeMCU 3.3V**
+  ![Pin Diagram](Curcuit_diagram_pinout.png)
 
 Make sure to connect the grounds of both boards together to ensure a common reference.
 
 ## System Architecture
 
 - We have provided a reference **System Architecture** for you to get an idea how can this library be used.
+  
   ![System Architecture](System%20Architecture.png)
 
 ## Instructions for contributing to the project
